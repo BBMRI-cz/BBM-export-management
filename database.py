@@ -1,19 +1,13 @@
-import psycopg2
+import psycopg
 
 class Database:
-    def __init__(self, database_name, host, port, user, password):
-        self.conn = psycopg2.connect(
-            database = database_name,
-            host=host,
-            port=port,
-            user=user,
-            password=password
-        )
+    def __init__(self, database_name, host, port, user, password=None):
+        self.conn = psycopg.connect(f"user={user} password={password} host={host} port={port} dbname={database_name}")
         self.c = self.conn.cursor()
 
     def insert_patient(self, patient_id, birth_date, sex, status, consent):
         self.c.execute(
-            f"INSERT INTO patient (id, birth_date, sex, status, consente) VALUES (%s, %s, %s, %s, %s)",
+            f"INSERT INTO patient (id, birth_date, sex, status, consent) VALUES (%s, %s, %s, %s, %s)",
             (
                 patient_id,
                 birth_date,
@@ -27,13 +21,11 @@ class Database:
     def insert_tissue(self, sample_id,  patient_id, biopsy_id, predictive_id, samples_no, available_samples_no,
                        material_type_id, diagnosis, ptnm, morphology, cut_time, freeze_time, retrieved):
         self.c.execute(
-            f"INSERT INTO tissue (sample_id, patient_id, biopsy_id, predictive_id, samples_no, available_samples_no,
-              material_type_id, diagnosis, pntm, morphology, cut_time, freeze_time, retrieved) 
-              VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            f"INSERT INTO tissue (sample_id, patient_id, biopsy_id, predictive_id, samples_no, available_samples_no, material_type_id, diagnosis, ptnm, morphology, cut_time, freeze_time, retrieved) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (
                 sample_id,
                 patient_id,
-                biopsy_id, 
+                biopsy_id,
                 predictive_id,
                 samples_no,
                 available_samples_no,
@@ -50,12 +42,11 @@ class Database:
     def insert_serum(self, sample_id,  patient_id, biopsy_id, predictive_id, samples_no, available_samples_no,
                     material_type_id, diagnosis, taking_date):
         self.c.execute(
-            f"INSERT INTO tissue (sample_id, patient_id, biopsy_id, predictive_id, samples_no,
-              available_samples_no, material_type_id, diagnosis,taking_date) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            f"INSERT INTO serum (sample_id, patient_id, biopsy_id, predictive_id, samples_no, available_samples_no, material_type_id, diagnosis,taking_date) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (
                 sample_id,
                 patient_id,
-                biopsy_id, 
+                biopsy_id,
                 predictive_id,
                 samples_no,
                 available_samples_no,
@@ -68,12 +59,11 @@ class Database:
     def insert_genome(self, sample_id,  patient_id, biopsy_id, predictive_id, samples_no, available_samples_no,
                     material_type_id, retrieved, taking_date):
         self.c.execute(
-            f"INSERT INTO tissue (sample_id, patient_id, biopsy_id, predictive_id, samples_no,
-              available_samples_no, material_type_id, retrieved, taking_date) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            f"INSERT INTO genome (sample_id, patient_id, biopsy_id, predictive_id, samples_no, available_samples_no, material_type_id, retrieved, taking_date) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (
                 sample_id,
                 patient_id,
-                biopsy_id, 
+                biopsy_id,
                 predictive_id,
                 samples_no,
                 available_samples_no,
@@ -86,12 +76,11 @@ class Database:
     def insert_cell(self, sample_id,  patient_id, biopsy_id, predictive_id, samples_no, available_samples_no,
                     material_type_id):
         self.c.execute(
-            f"INSERT INTO tissue (sample_id, patient_id, biopsy_id, predictive_id, samples_no,
-              available_samples_no, material_type_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            f"INSERT INTO cell (sample_id, patient_id, biopsy_id, predictive_id, samples_no, available_samples_no, material_type_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
             (
                 sample_id,
                 patient_id,
-                biopsy_id, 
+                biopsy_id,
                 predictive_id,
                 samples_no,
                 available_samples_no,
@@ -101,8 +90,7 @@ class Database:
 
     def insert_diagnosis_material(self, sample_id,  patient_id, material_type_id, taking_date, diagnosis, retrieved):
         self.c.execute(
-            f"INSERT INTO tissue (sample_id, patient_id, material_type_id, taking_date, diagnosis, retrieved) 
-            VALUES (%s, %s, %s, %s, %s)",
+            f"INSERT INTO diagnosis_material (sample_id, patient_id, material_type_id, taking_date, diagnosis, retrieved) VALUES (%s, %s, %s, %s, %s, %s)",
             (
                 sample_id,
                 patient_id,
@@ -112,12 +100,11 @@ class Database:
                 retrieved,
             ),
         )
-    
+
     def get_samples_with_pred_id(self, predictive_id):
         data = []
         self.c.execute(
-            f"SELECT sample_id, patient_id, biopsy_id, predictive_id, material_type_id, diagnosis, cut_time, freeze_time 
-            FROM tissue WHERE predictive_id == (%s)",
+            f"SELECT sample_id, patient_id, biopsy_id, predictive_id, material_type_id, diagnosis, cut_time, freeze_time FROM tissue WHERE predictive_id = %s",
             (
                 predictive_id,
             ),
@@ -136,8 +123,7 @@ class Database:
                 }
             )
         self.c.execute(
-            f"SELECT sample_id, patient_id, biopsy_id, predictive_id, material_type_id, diagnosis, taking_date 
-            FROM serum WHERE predictive_id == (%s)",
+            f"SELECT sample_id, patient_id, biopsy_id, predictive_id, material_type_id, diagnosis, taking_date FROM serum WHERE predictive_id = %s",
             (
                 predictive_id,
             ),
@@ -156,8 +142,7 @@ class Database:
                 }
             )
         self.c.execute(
-            f"SELECT sample_id, patient_id, biopsy_id, predictive_id, material_type_id, taking_date 
-            FROM genome WHERE predictive_id == (%s)",
+            f"SELECT sample_id, patient_id, biopsy_id, predictive_id, material_type_id, taking_date FROM genome WHERE predictive_id = %s",
             (
                 predictive_id,
             ),
@@ -176,8 +161,7 @@ class Database:
                 }
             )
         self.c.execute(
-            f"SELECT sample_id, patient_id, biopsy_id, predictive_id, material_type_id 
-            FROM cell WHERE predictive_id == (%s)",
+            f"SELECT sample_id, patient_id, biopsy_id, predictive_id, material_type_id FROM cell WHERE predictive_id = %s",
             (
                 predictive_id,
             ),

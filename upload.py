@@ -29,9 +29,9 @@ material_type_to_id = {
 
 def read_exports(path, db):
     for file in os.listdir(path):
-        try: 
+        try:
             tree = ET.parse(os.path.join(path, file))
-            read_xml_export(tree, db)
+            read_xml_export(tree.getroot(), db)
         except ET.ParseError:
             print("Can't open XML - ", os.path.join(path, file))
             continue
@@ -44,6 +44,7 @@ def read_xml_export(root: ET.ElementTree, db: Database):
     consent = root.get("consent")
     db.insert_patient(patient_id, birth_date, sex, None, consent)
     lts = root.find(f"{xml_prefix}LTS")
+    lts = lts if lts is not None else []
     for child in lts:
         if "tissue" in child.tag:
             db.insert_tissue(
@@ -51,15 +52,15 @@ def read_xml_export(root: ET.ElementTree, db: Database):
                 patient_id,
                 child.get("biopsy"),
                 child.get("predictive_number"),
-                child.find(f"{xml_prefix}samplesNo"),
-                child.find(f"{xml_prefix}availableSamplesNo"),
-                material_type_to_id[child.find(f"{xml_prefix}materialType")],
-                child.find(f"{xml_prefix}diagnosis"),
-                child.find(f"{xml_prefix}pTNM"),
-                child.find(f"{xml_prefix}morphology"),
-                child.find(f"{xml_prefix}cutTime"),
-                child.find(f"{xml_prefix}freezeTime"),
-                child.find(f"{xml_prefix}retrieved"),
+                child.find(f"{xml_prefix}samplesNo").text,
+                child.find(f"{xml_prefix}availableSamplesNo").text,
+                material_type_to_id[child.find(f"{xml_prefix}materialType").text],
+                child.find(f"{xml_prefix}diagnosis").text,
+                child.find(f"{xml_prefix}pTNM").text,
+                child.find(f"{xml_prefix}morphology").text,
+                child.find(f"{xml_prefix}cutTime").text,
+                child.find(f"{xml_prefix}freezeTime").text,
+                child.find(f"{xml_prefix}retrieved").text,
                 )
         if "genome" in child.tag:
             db.insert_genome(
@@ -67,11 +68,11 @@ def read_xml_export(root: ET.ElementTree, db: Database):
                 patient_id,
                 child.get("biopsy"),
                 child.get("predictive_number"),
-                child.find(f"{xml_prefix}samplesNo"),
-                child.find(f"{xml_prefix}availableSamplesNo"),
-                material_type_to_id[child.find(f"{xml_prefix}materialType")],
-                child.find(f"{xml_prefix}retrieved"),
-                child.find(f"{xml_prefix}takingDate"),
+                child.find(f"{xml_prefix}samplesNo").text,
+                child.find(f"{xml_prefix}availableSamplesNo").text,
+                material_type_to_id[child.find(f"{xml_prefix}materialType").text],
+                child.find(f"{xml_prefix}retrieved").text,
+                child.find(f"{xml_prefix}takingDate").text,
                 )
         if "serum" in child.tag:
             db.insert_serum(
@@ -79,11 +80,11 @@ def read_xml_export(root: ET.ElementTree, db: Database):
                 patient_id,
                 child.get("biopsy"),
                 child.get("predictive_number"),
-                child.find(f"{xml_prefix}samplesNo"),
-                child.find(f"{xml_prefix}availableSamplesNo"),
-                material_type_to_id[child.find(f"{xml_prefix}materialType")],
-                child.find(f"{xml_prefix}diagnosis"),
-                child.find(f"{xml_prefix}takingDate"),
+                child.find(f"{xml_prefix}samplesNo").text,
+                child.find(f"{xml_prefix}availableSamplesNo").text,
+                material_type_to_id[child.find(f"{xml_prefix}materialType").text],
+                child.find(f"{xml_prefix}diagnosis").text,
+                child.find(f"{xml_prefix}takingDate").text,
             )
         if "cell" in child.tag:
             db.insert_cell(
@@ -91,19 +92,21 @@ def read_xml_export(root: ET.ElementTree, db: Database):
                 patient_id,
                 child.get("biopsy"),
                 child.get("predictive_number"),
-                child.find(f"{xml_prefix}samplesNo"),
-                child.find(f"{xml_prefix}availableSamplesNo"),
-                material_type_to_id[child.find(f"{xml_prefix}materialType")],
+                child.find(f"{xml_prefix}samplesNo").text,
+                child.find(f"{xml_prefix}availableSamplesNo").text,
+                material_type_to_id[child.find(f"{xml_prefix}materialType").text],
             )
     sts = root.find(f"{xml_prefix}STS")
+    sts = sts if sts is not None else []
     for child in sts:
         if "diagnosisMaterial" in child.tag:
             db.insert_diagnosis_material(
                 child.get("sampleId"),
                 patient_id,
-                child.find(f"{xml_prefix}takingDate"),
-                child.find(f"{xml_prefix}diagnosis"),
-                child.find(f"{xml_prefix}retrieved"),
+                material_type_to_id[child.find(f"{xml_prefix}materialType").text],
+                child.find(f"{xml_prefix}takingDate").text,
+                child.find(f"{xml_prefix}diagnosis").text,
+                child.find(f"{xml_prefix}retrieved").text,
             )
 
 if __name__ == "__main__":
@@ -112,7 +115,7 @@ if __name__ == "__main__":
         os.environ["PSQL_HOST"],
         os.environ["PSQL_PORT"],
         os.environ["PSQL_USER"],
-        os.environ["PSQL_PSSWD"],
+        os.environ["PSQL_PSSWD"]
     )
-    path = ""
+    path = os.environ["BBM_EXPORT_PATH"]
     read_exports(path, db)

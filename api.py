@@ -9,6 +9,7 @@ CORS(app, resources={r'/*': {'origins':"*"}})
 
 @app.route("/api/specimen/<predictive_id>", methods=["GET"])
 def api_get_specimen_by_pred_id(predictive_id):
+    predictive_id = predictive_id.replace("-", "/")
     return jsonify(
         db.get_samples_with_pred_id(predictive_id)
     )
@@ -26,4 +27,4 @@ if __name__ == "__main__":
     # Production?
     from waitress import serve
 
-    serve(app, host="0.0.0.0", port=8080)
+    serve(app, host="0.0.0.0", port=8081)
