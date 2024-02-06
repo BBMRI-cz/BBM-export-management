@@ -1,4 +1,3 @@
-import requests
 import os
 import xml.etree.ElementTree as ET
 from database import Database
